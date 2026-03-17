@@ -33,3 +33,23 @@ class BankTransaction(BaseModel):
     amount: Decimal = Field(gt=0)
     timestamp: datetime
     transaction_type: TransactionType
+
+class Address(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    
+    street: str
+    city: str
+    zip_code: str = Field(pattern=r'^\d{5}$')
+
+class User(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel, 
+        populate_by_name=True, 
+        strict=settings.strict_mode
+    )
+
+    id: str = Field(pattern=r'^[a-fA-F0-9\-]{36}$|^ACC-\d{4}$')
+    email: EmailStr
+    age: int = Field(ge=18, le=120)
+    address: Address
+    social_security_number: str = Field(exclude=True)
