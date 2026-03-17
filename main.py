@@ -1,9 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import (
-    BaseModel, Field, EmailStr, ConfigDict, 
-    field_validator, model_validator, ValidationError, computed_field
-)
-from pydantic.alias_generators import to_camel
+from pydantic_settings import BaseSettings, BaseModel, Field, ConfigDict
+from decimal import Decimal
+from enum import Enum
+from datetime import datetime
+from pydantic.aliases_generation import to_camel
 
 class GlobalConfig(BaseSettings):
     strict_mode: bool = False
@@ -13,18 +12,24 @@ class GlobalConfig(BaseSettings):
 
 settings = GlobalConfig() 
 
-class Address(BaseModel):
-    """Zagnieżdżony model adresu[cite: 9]."""
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    
-    street: str
-    city: str
-    zip_code: str = Field(pattern=r'^\d{5}$')  # 5-cyfrowy kod [cite: 9]
+class Currency(str, Enum):
+    USD = 'USD'
+    EUR = 'EUR'
+    GBP = 'GBP'
 
-class User(BaseModel):
-    """Model użytkownika z walidacją tożsamości[cite: 5, 6]."""
+class TransactionType(str, Enum):
+    DEBIT = 'DEBIT'
+    CREDIT = 'CREDIT'
+
+class BankTransaction(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel, 
         populate_by_name=True, 
-        strict=settings.strict_mode
+        strict=settings.strict_mode,
+        coerce_numbers_to_str=False
     )
+
+    currency: Currency
+    amount: Decimal = Field(gt=0)
+    timestamp: datetime
+    transaction_type: TransactionType
