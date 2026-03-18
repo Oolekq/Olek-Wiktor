@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, ValidationError, field_validator, model_validator
 from decimal import Decimal
 from enum import Enum
@@ -10,8 +10,7 @@ from pydantic.alias_generators import to_camel
 class GlobalConfig(BaseSettings):
     strict_mode: bool = False
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = GlobalConfig() 
 
