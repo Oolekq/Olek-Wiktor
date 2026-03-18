@@ -1,8 +1,8 @@
 from pydantic_settings import BaseSettings
-from pydantic import BaseModel, Field, ConfigDict, EmailStr, ValidationError
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, ValidationError, field_validator, model_validator
 from decimal import Decimal
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import List, Dict
 from pydantic.alias_generators import to_camel
 
@@ -71,3 +71,29 @@ def handle_validation_errors(e: ValidationError) -> List[Dict[str, str]]:
             
         friendly_errors.append({"location": loc, "message": msg})
     return friendly_errors
+
+class PolicyStatus(str, Enum):
+    ACTIVE = 'ACTIVE'
+    ELAPSED = 'ELAPSED'
+    PENDING = 'PENDING'
+
+class InsurancePolicy(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    policy_number: str = Field(min_length=10, max_length=10)
+    start_date: date
+    end_date: date
+    status: PolicyStatus
+
+    @field_validator('policy_number')
+    @classmethod
+    def must_be_upper(cls, v: str) -> str:
+        if not v.isupper():
+            raise ValueError("Policy number must be strictly uppercase")
+        return v
+
+    @model_validator(mode='after')
+    def validate_date_range(self) -> 'InsurancePolicy':
+        if self.end_date < self.start_date + timedelta(days=30):
+            raise ValueError("End date must be at least 30 days after start_date")
+        return self
