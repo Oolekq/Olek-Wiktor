@@ -1,8 +1,11 @@
-from pydantic_settings import BaseSettings, BaseModel, Field, ConfigDict
+from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, ValidationError
 from decimal import Decimal
 from enum import Enum
 from datetime import datetime
-from pydantic.aliases_generation import to_camel
+from typing import List, Dict
+from pydantic.alias_generators import to_camel
+
 
 class GlobalConfig(BaseSettings):
     strict_mode: bool = False
@@ -53,3 +56,18 @@ class User(BaseModel):
     age: int = Field(ge=18, le=120)
     address: Address
     social_security_number: str = Field(exclude=True)
+
+def handle_validation_errors(e: ValidationError) -> List[Dict[str, str]]:
+    """Konwertuje błędy Pydantic na czytelny raport[cite: 33, 34, 50]."""
+    friendly_errors = []
+    for error in e.errors():
+        loc = " -> ".join([str(x) for x in error['loc']])
+        msg = error['msg']
+        
+        # Niestandardowe wiadomości dla Enum [cite: 35]
+        if error['type'] == 'enum':
+            allowed = ", ".join([str(v) for v in error['ctx']['expected']])
+            msg = f"Please select a valid option: {allowed}"
+            
+        friendly_errors.append({"location": loc, "message": msg})
+    return friendly_errors
