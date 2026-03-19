@@ -96,3 +96,25 @@ class InsurancePolicy(BaseModel):
         if self.end_date < self.start_date + timedelta(days=30):
             raise ValueError("End date must be at least 30 days after start_date")
         return self
+
+    class Account(BaseModel):
+        model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+        user: User
+        transactions: List[BankTransaction]
+
+        @property
+        def total_portfolio_value(self):
+            return sum(t.amount for t in self.transactions)
+
+        @computed_field
+        @property
+        def risk_score(self) -> str:
+            total = self.total_portfolio_value
+            age = self.user.age
+
+            if total > 50000 and age > 60:
+                return "Low"
+            elif total > 10000 and age < 25:
+                return "High"
+            return "Medium"
