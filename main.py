@@ -118,3 +118,41 @@ class Account(BaseModel):
         elif total > 10000 and age < 25:
             return "High"
         return "Medium"
+
+
+if __name__ == "__main__":
+    messy_data = {
+        "user": {
+            "id": "ACC-1234",
+            "email": "jan.kowalski@example.com",
+            "age": 30,
+            "address": {
+                "street": "Wiejska 1",
+                "city": "Warszawa",
+                "zipCode": "00443"
+            },
+            "socialSecurityNumber": "PL123456789"
+        },
+        "transactions": [
+            {
+                [span_31](start_span)"currency": "PLN", 
+                [span_32](start_span)"amount": "150.50", 
+                "timestamp": "2024-03-15T10:00:00Z",
+                "transactionType": "CREDIT"
+            }
+        ]
+    }
+
+    try:
+        print(f"--- TRYB WALIDACJI: {'STRICT' if settings.strict_mode else 'LAX'} ---")
+        account = Account(**messy_data)
+        
+        print("\n[SUKCES] Dane przetworzone:")
+        print(account.model_dump_json(indent=2, by_alias=True))
+        print(f"\nPortfolio Value: {account.total_portfolio_value}")
+        
+    except ValidationError as e:
+        print("\n[BŁĄD WALIDACJI] Wykryto nieprawidłowe dane:")
+        report = handle_validation_errors(e)
+        for err in report:
+            print(f"- Gdzie: {err['location']} | Wiadomość: {err['message']}")
